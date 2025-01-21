@@ -1,0 +1,7 @@
+requests
+SQLAlchemy
+PyMySQL
+six
+python-dotenv
+praw
+dotenv
