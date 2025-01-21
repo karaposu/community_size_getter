@@ -17,10 +17,11 @@ def main():
     # 1) Locate the same SQLite DB path as in create_community_size_db.py
     base_dir = os.path.dirname(__file__)
     #data_dir = os.path.join(base_dir, "..", "data")#
-    base_dir=data_dir
+    # base_dir=data_dir
+    data_dir=base_dir
     os.makedirs(data_dir, exist_ok=True)
 
-    db_path = os.path.join(data_dir, "budget_tracker.db")
+    db_path = os.path.join(data_dir, "community.db")
     db_path = os.path.abspath(db_path)
     db_url = f"sqlite:///{db_path}"
 

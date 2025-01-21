@@ -48,9 +48,11 @@ def main():
     result_date = datetime.strptime(results["date"], "%Y-%m-%d").date()
 
     new_entry = CommunitySize(
-        subreddit_size=results["subreddit_size"],
-        discord_size=results["discord_size"],
-        date=result_date
+        reddit=results["subreddit_size"],
+        discord=results["discord_size"],
+        value_date=result_date, 
+        fill_date=result_date
+        
     )
     
     # Add and commit
