@@ -28,15 +28,21 @@ def main():
     Session = sessionmaker(bind=engine)
     session = Session()
 
+
+    print(f"session created")
+
     # Instantiate your CommunitySizeGetter
     csg = CommunitySizeGetter(
         subreddit_name="pepecoin",
         twitter_handle="",  # or whatever handle you need
         discord_invite_link="https://discord.com/invite/6NXJt25q2J",
-        telegram_channel_name="",  # or your telegram channel
+        telegram_channel_link="https://t.me/PepecoinGroup", 
         use_ssl=False,
         cert_path=None
     )
+
+    print(f"csg created")
+
 
     # Fetch the sizes (returns a dict like {"subreddit_size": X, "discord_size": Y, "date": "YYYY-MM-DD"})
     results = csg.get_all()
@@ -46,10 +52,11 @@ def main():
     # Make sure the `date` field in your CommunitySize model matches a DATE or DATETIME type
     # and you parse it appropriately:
     result_date = datetime.strptime(results["date"], "%Y-%m-%d").date()
-
+    
     new_entry = CommunitySize(
         reddit=results["subreddit_size"],
         discord=results["discord_size"],
+        telegram=results["telegram_size"],
         value_date=result_date, 
         fill_date=result_date
         

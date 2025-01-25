@@ -3,6 +3,9 @@ from urllib.parse import urlparse
 from datetime import datetime
 import requests
 from dotenv import load_dotenv
+from bs4 import BeautifulSoup
+import re
+# from dotenv import load_dotenv
 
 # Load environment variables from .env
 load_dotenv()
@@ -13,7 +16,7 @@ class CommunitySizeGetter:
         subreddit_name,
         twitter_handle,
         discord_invite_link,
-        telegram_channel_name,
+        telegram_channel_link,
         use_proxy=True,
         use_ssl=False,
         cert_path=None
@@ -22,7 +25,7 @@ class CommunitySizeGetter:
         :param subreddit_name: Name of the subreddit
         :param twitter_handle: (not used in this example, but available)
         :param discord_invite_link: Discord invite URL
-        :param telegram_channel_name: (not used in this example, but available)
+        :param telegram_channel_link: (not used in this example, but available)
         :param use_proxy: Boolean indicating whether to route traffic through the proxy
         :param use_ssl: Whether to connect to Bright Data's proxy via HTTPS or HTTP
         :param cert_path: Path to Bright Data's CA cert (if you want to trust a self-signed cert).
@@ -31,7 +34,7 @@ class CommunitySizeGetter:
         self.subreddit_name = subreddit_name
         self.twitter_handle = twitter_handle
         self.discord_invite_link = discord_invite_link
-        self.telegram_channel_name = telegram_channel_name
+        self.telegram_channel_link = telegram_channel_link
 
         # Store this for reference
         self.use_proxy = use_proxy
@@ -68,7 +71,7 @@ class CommunitySizeGetter:
         
         import praw
         import os
-        from dotenv import load_dotenv
+       
         load_dotenv()
 
         REDDIT_CLIENT_ID = os.environ.get('REDDIT_CLIENT_ID')
@@ -127,7 +130,7 @@ class CommunitySizeGetter:
         if not invite_code:
             print("Failed to extract invite code from the invite link.")
             return None
-
+         
         url = f"https://discord.com/api/v10/invites/{invite_code}?with_counts=true"
         headers = {"User-Agent": "DiscordServerSizeFetcher/1.0"}
         
@@ -136,7 +139,8 @@ class CommunitySizeGetter:
                 url,
                 headers=headers,
                 proxies=self.proxies,
-                verify=self.verify
+                verify=self.verify, 
+                timeout=10  
             )
             response.raise_for_status()
             data = response.json()
@@ -145,16 +149,57 @@ class CommunitySizeGetter:
         except requests.exceptions.RequestException as e:
             print(f"Error fetching Discord server size: {e}")
             return None
+        
+    def get_telegram_member_count(self) -> int:
+        """
+        Scrape the member count from a public Telegram group link
+        like https://t.me/PepecoinGroup
+        """
+        # 1. Download the page
+
+     
+        # self.telegram=    "https://t.me/PepecoinGroup"
+        
+        response = requests.get(self.telegram_channel_link)
+        response.raise_for_status()  # Raise an error if request failed
+
+        # 2. Parse HTML with BeautifulSoup
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # 3. Find the div that holds the text (e.g. "2 840 members, 133 online")
+        extra_div = soup.find('div', class_='tgme_page_extra')
+        if not extra_div:
+            raise ValueError("Could not find member info on the page.")
+
+        text = extra_div.get_text(strip=True)
+        # text might be: "2 840 members, 133 online"
+
+        # 4. Regex: capture digits (and possible spaces within them)
+        #    Then remove the spaces so "2 840" → "2840"
+        match = re.search(r'(\d[\d ]+)', text)  # match digits & internal spaces
+        if match:
+            number_str = match.group(1).replace(' ', '')  # remove spaces
+            return int(number_str)
+        else:
+            raise ValueError(f"Could not parse the member count from: '{text}'")
+
 
     def get_all(self):
         """Get subreddit subscriber count and Discord server size in one call."""
+        
         subreddit_size = self.get_subreddit_size()
+        print(f"subreddit_size fetched")
         discord_size = self.fetch_discord_server_size()
+        print(f"discord_size fetched")
+        telegram_size=self.get_telegram_member_count()
+        print(f"telegram_size fetched")
+
         todays_date = datetime.now().strftime("%Y-%m-%d")
 
         return {
             "subreddit_size": subreddit_size,
             "discord_size": discord_size,
+            "telegram_size":telegram_size, 
             "date": todays_date
         }
 
@@ -163,7 +208,7 @@ def main():
     subreddit = "pepecoin"
     twitter = ""
     discord_invite_link = "https://discord.com/invite/6NXJt25q2J"
-    telegram = ""
+    telegram= "https://t.me/PepecoinGroup"
     
     cert_path= "/Users/ns/Desktop/projects/community_size_getter/brightdata_ssl_port_33335.crt"
     
@@ -171,7 +216,7 @@ def main():
         subreddit_name=subreddit,
         twitter_handle=twitter,
         discord_invite_link=discord_invite_link,
-        telegram_channel_name=telegram,
+        telegram_channel_link=telegram,
         use_proxy=False,     # Toggle this to False to skip the proxy
         use_ssl=False,      # Toggle this to True to use an HTTPS proxy
         cert_path=cert_path

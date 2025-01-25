@@ -5,3 +5,4 @@ six
 python-dotenv
 praw
 dotenv
+beautifulsoup4
