@@ -35,7 +35,7 @@ class CommunitySizeGetter:
         self.twitter_handle = twitter_handle
         self.discord_invite_link = discord_invite_link
         self.telegram_channel_link = telegram_channel_link
-
+        
         # Store this for reference
         self.use_proxy = use_proxy
 

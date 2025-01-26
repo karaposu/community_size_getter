@@ -5,8 +5,6 @@ from sqlalchemy.orm import sessionmaker
 
 # Import the model and base
 from models import CommunitySize, Base
-
-# Import your CommunitySizeGetter class
 from community_size_getter import CommunitySizeGetter
 
 def main():
@@ -52,20 +50,37 @@ def main():
     # Make sure the `date` field in your CommunitySize model matches a DATE or DATETIME type
     # and you parse it appropriately:
     result_date = datetime.strptime(results["date"], "%Y-%m-%d").date()
+
+
+    # Check if there's already an entry in the DB for this date
+    existing_entry = session.query(CommunitySize).filter_by(value_date=result_date).one_or_none()
     
-    new_entry = CommunitySize(
-        reddit=results["subreddit_size"],
-        discord=results["discord_size"],
-        telegram=results["telegram_size"],
-        value_date=result_date, 
-        fill_date=result_date
+    if existing_entry:
+        # Update the existing record
+        existing_entry.reddit = results["subreddit_size"]
+        existing_entry.discord = results["discord_size"]
+        existing_entry.telegram = results["telegram_size"]
+        existing_entry.fill_date = result_date  # or datetime.now().date(), depending on your logic
+
+        session.commit()
+        print(f"Updated data for date {result_date} (ID: {existing_entry.id})")
+    else:
+        # Create a new entry
+        new_entry = CommunitySize(
+            reddit=results["subreddit_size"],
+            discord=results["discord_size"],
+            telegram=results["telegram_size"],
+            value_date=result_date, 
+            fill_date=result_date
+        )
         
-    )
+        session.add(new_entry)
+        session.commit()
+        print(f"Saved new data to DB with ID: {new_entry.id} for date {result_date}")
+
+
     
-    # Add and commit
-    session.add(new_entry)
-    session.commit()
-    print(f"Saved data to DB with ID: {new_entry.id}")
+  
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,22 @@
+[Unit]
+Description=Service to run save_sizes_job.py daily
+
+[Service]
+Type=oneshot
+
+# 1) Set the working directory to your project folder
+WorkingDirectory=/home/enes/community_size_getter
+
+# 2) Activate any environment if needed, then run Python
+#    Replace "/path/to/venv" with the location of your virtual env if using one,
+#    or remove the 'source' line if not needed.
+# ExecStart=/bin/bash -c 'source /path/to/venv/bin/activate; python save_sizes_job.py'
+
+# If you do NOT use a virtual env, you could do:
+ExecStart=/home/enes/miniconda3/bin/python /home/enes/community_size_getter/save_sizes_job.py
+
+# 3) If your script automatically loads .env via python-dotenv or similar,
+#    it should find it because you set WorkingDirectory.
+
+[Install]
+WantedBy=multi-user.target
