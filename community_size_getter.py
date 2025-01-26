@@ -5,10 +5,14 @@ import requests
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 import re
+import json
 # from dotenv import load_dotenv
 
 # Load environment variables from .env
 load_dotenv()
+
+from bright_data_web_unlocker import BrightdataWebUnlocker
+unlocker = BrightdataWebUnlocker()
 
 class CommunitySizeGetter:
     def __init__(
@@ -118,6 +122,38 @@ class CommunitySizeGetter:
         except requests.exceptions.RequestException as e:
             print(f"Error fetching data from Reddit: {e}")
             return None
+        
+
+    
+
+    def fetch_discord_server_size_via_unlocker(self):
+
+        parsed_url = urlparse(self.discord_invite_link)
+        path_parts = parsed_url.path.rstrip("/").split("/")
+        invite_code = path_parts[-1] if path_parts else ""
+
+        if not invite_code:
+            print("Failed to extract invite code from the invite link.")
+            return None
+        
+        url = f"https://discord.com/api/v10/invites/{invite_code}?with_counts=true"
+        
+        data_str=unlocker.get_source_safe(url)
+
+        # print(type(data))
+
+        # 2) Convert string to a dictionary
+        try:
+            data_dict = json.loads(data_str)
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {e}")
+            return None
+
+        # 3) Extract the 'approximate_member_count'
+        size = data_dict.get("approximate_member_count")
+        return size
+
+
 
     def fetch_discord_server_size(self):
         """
@@ -189,7 +225,9 @@ class CommunitySizeGetter:
         
         subreddit_size = self.get_subreddit_size()
         print(f"subreddit_size fetched")
-        discord_size = self.fetch_discord_server_size()
+        # discord_size = self.fetch_discord_server_size()
+        discord_size = self.fetch_discord_server_size_via_unlocker()
+        
         print(f"discord_size fetched")
         telegram_size=self.get_telegram_member_count()
         print(f"telegram_size fetched")
