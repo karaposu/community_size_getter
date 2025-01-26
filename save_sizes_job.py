@@ -1,4 +1,5 @@
 import os
+import logging
 from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -6,6 +7,11 @@ from sqlalchemy.orm import sessionmaker
 # Import the model and base
 from models import CommunitySize, Base
 from community_size_getter import CommunitySizeGetter
+
+
+sqlalchemy_logger = logging.getLogger('sqlalchemy.engine')
+sqlalchemy_logger.setLevel(logging.ERROR)  # Set to ERROR to log only errors
+
 
 def main():
     # Build the same SQLite DB path as in create_community_size_db.py
@@ -20,13 +26,14 @@ def main():
 
     # Create the SQLite connection
     main_db_url = f"sqlite:///{main_db_path}"
-    engine = create_engine(main_db_url, echo=True)
+    engine = create_engine(main_db_url, echo=False)
 
     # Create a Session
     Session = sessionmaker(bind=engine)
     session = Session()
 
-
+    print(f" ")
+    print(f"v1")
     print(f"session created")
 
     # Instantiate your CommunitySizeGetter
@@ -63,7 +70,7 @@ def main():
         existing_entry.fill_date = result_date  # or datetime.now().date(), depending on your logic
 
         session.commit()
-        print(f"Updated data for date {result_date} (ID: {existing_entry.id})")
+        # print(f"Updated data for date {result_date} (ID: {existing_entry.id})")
     else:
         # Create a new entry
         new_entry = CommunitySize(

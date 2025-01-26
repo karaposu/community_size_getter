@@ -14,6 +14,10 @@ load_dotenv()
 from bright_data_web_unlocker import BrightdataWebUnlocker
 unlocker = BrightdataWebUnlocker()
 
+import logging
+logger = logging.getLogger(__name__)
+
+
 class CommunitySizeGetter:
     def __init__(
         self,
@@ -25,6 +29,8 @@ class CommunitySizeGetter:
         use_ssl=False,
         cert_path=None
     ):
+        
+        logger.debug("Inside CommunitySizeGetter v1")
         """
         :param subreddit_name: Name of the subreddit
         :param twitter_handle: (not used in this example, but available)
